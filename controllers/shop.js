@@ -40,31 +40,34 @@ exports.getIndex = (req, res, next) => {
 }
 
 exports.getCart = (req, res, next) => {
-  Cart.getCart(cart => {
-    if (cart) {
-      Product.fetchAll(products => {
-        const cartProducts = []
-        for (let product of products) {
-          const prod = cart.products.find(c => c.id === product.id)
-          if (prod) {
-            cartProducts.push({ productData: product, qty: prod.qty })
-          }
-        }
-        res.render("shop/cart", {
-          pageTitle: "Cart",
-          path: "/cart",
-          products: cartProducts
-        })
+  req.user.getCart().then(cart =>
+    cart.getProducts().then(products =>
+      res.render("shop/cart", {
+        pageTitle: "Cart",
+        path: "/cart",
+        products
       })
-    }
-  })
+    )
+  )
 }
 
 exports.postCart = (req, res, next) => {
   const { productId } = req.body
-  Product.findById(productId, product => {
-    Cart.addProduct(productId, product.price)
-  })
+  req.user
+    .getCart()
+    .then(cart => {
+      return cart.getProducts({ where: { id: productId } })
+    })
+    .then(products => {
+      let product
+      if (products.lenght > 0) {
+        product = products[0]
+      }
+      let newQuantity = 1
+      if (product) {
+        // ...
+      }
+    })
 
   res.redirect("/cart")
 }
